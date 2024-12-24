@@ -84,10 +84,10 @@ const Index = () => {
     });
 
     Array.from(timestamps).sort().forEach(timestamp => {
-      const row = [timestamp];
+      const row = [timestamp.toString()];
       for (let i = 1; i <= 9; i++) {
         const reading = sensorData[i]?.find(r => r.timestamp === timestamp);
-        row.push(reading?.value || '');
+        row.push(reading?.value?.toString() ?? '0'); // Convert to string and use '0' as default
       }
       csvRows.push(row.join(','));
     });
