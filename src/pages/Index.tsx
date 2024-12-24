@@ -14,17 +14,44 @@ interface SensorReadings {
   [key: number]: SensorData[];
 }
 
+// Generate sample data for demonstration
+const generateSampleData = () => {
+  const sampleData: SensorReadings = {};
+  const now = Date.now();
+  
+  // Generate data for 3 sensors
+  for (let sensorId = 1; sensorId <= 3; sensorId++) {
+    sampleData[sensorId] = [];
+    // Generate 50 data points for each sensor
+    for (let i = 0; i < 50; i++) {
+      sampleData[sensorId].push({
+        timestamp: now - (50 - i) * 1000, // One reading per second
+        value: Math.sin(i * 0.1) * 10 + 20 + Math.random() * 5 // Generate sine wave with noise
+      });
+    }
+  }
+  return sampleData;
+};
+
 const Index = () => {
   const [serialPort, setSerialPort] = useState<SerialPort | null>(null);
   const [isCollecting, setIsCollecting] = useState(false);
   const [sensorData, setSensorData] = useState<SensorReadings>({});
   const [reader, setReader] = useState<ReadableStreamDefaultReader | null>(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   const handleConnect = (port: SerialPort) => {
     setSerialPort(port);
   };
 
   const startDataCollection = async (duration: number) => {
+    if (isDemoMode) {
+      setIsCollecting(true);
+      setSensorData(generateSampleData());
+      toast.success("Demo data loaded successfully");
+      return;
+    }
+
     if (!serialPort) return;
 
     setIsCollecting(true);
@@ -114,11 +141,22 @@ const Index = () => {
     <div className="container mx-auto p-4 space-y-6">
       <h1 className="text-3xl font-bold text-center mb-8">Gas Sensor Dashboard</h1>
       
-      {!serialPort && (
-        <SerialConnection onConnect={handleConnect} />
+      {!serialPort && !isDemoMode && (
+        <div className="flex flex-col gap-4 items-center">
+          <SerialConnection onConnect={handleConnect} />
+          <Button 
+            onClick={() => {
+              setIsDemoMode(true);
+              toast.success("Demo mode activated");
+            }}
+            variant="outline"
+          >
+            Try Demo Mode
+          </Button>
+        </div>
       )}
 
-      {serialPort && (
+      {(serialPort || isDemoMode) && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <DataCollectionControl
